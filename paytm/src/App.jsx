@@ -7,8 +7,10 @@ import { Dashboard } from './pages/Dashboard'
 import { Signup } from './pages/signup'
 import { Sendmoney } from './pages/Sendmoney'
 import { Sendpage } from './pages/Sendpage'
-import Updatebutton from './components/Updatebutton'
-import Updatepage from './pages/Updatepage'
+import {Updatepage} from './pages/Updatepage'
+import { Profile } from './pages/Profile'
+
+
 
 function App() {
   
@@ -22,7 +24,10 @@ function App() {
       <Route path="/sendmoney"  element={<Sendmoney/>}/>
       <Route path="/signup"  element={<Signup/>}/>
       <Route path="/send"  element={<Sendpage/>}/>
-      <Route path="/update" element={<Updatepage/>}/>
+      <Route path="/update"  element={<Updatepage/>}/>
+      <Route path="/profile"  element={<Profile/>}/>
+
+      
     </Routes>
     </BrowserRouter>
     </>

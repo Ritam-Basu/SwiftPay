@@ -140,6 +140,22 @@ router.get('/bulk', async (req, res) => {
     }
 });
 
+//profile
+// Backend route to get user profile
+router.get('/profile', authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.user_id).select('username firstname lastname');
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.json({ user });
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
 // Balance Retrieval Route
 router.get("/balance", authMiddleware, async (req, res) => {
     console.log("Request received for balance");
@@ -188,14 +204,14 @@ async function transfer(req, res) {
 
         // Find sender account
         const senderAccount = await Account.findOne({ userId: req.user_id }).session(session);
-
+        
         if (!senderAccount || senderAccount.balance < amount) {
             await session.abortTransaction();
             return res.status(400).json({ message: "Insufficient balance or sender account not found." });
         }
 
         // Find recipient account
-        const recipientAccount = await Account.findOne({ userId: to }).session(session);
+        const recipientAccount = await Account.findOne({ username:to }).session(session);
         if (!recipientAccount) {
             await session.abortTransaction();
             return res.status(400).json({ message: "Recipient account not found." });
@@ -229,6 +245,113 @@ async function transfer(req, res) {
 // router.post('/transfer', authMiddleware, transfer);
 
 
-router.post('/transfer', authMiddleware, transfer);
+router.post('/transfer', authMiddleware, async (req, res) => {
+    const { to, amount } = req.body;
+
+    // Input validation
+    if (!to || !amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid input" });
+    }
+
+    try {
+        // Get the sender's details using req.user_id from the middleware
+        const sender = await User.findById(req.user_id);
+        console.log(sender);
+        if (!sender) {
+            return res.status(404).json({ message: "Sender not found" });
+        }
+
+        // Check if sender has sufficient balance
+        if (sender.balance < amount) {
+            return res.status(400).json({ message: "Insufficient balance" });
+        }
+
+        // Find the recipient by username
+        const recipient = await User.findOne({ username: to });
+        console.log(recipient);
+        if (!recipient) {
+            return res.status(404).json({ message: "Recipient not found" });
+        }
+
+        
+        await Account.updateOne(
+            { userId: req.user_id },
+            { $inc: { balance: -amount } },
+        )
+        await Account.updateOne(
+            {userId: recipient._id},
+            
+            { $inc: { balance: +amount } },
+        )
+
+        res.json({ message: "Transfer successful" });
+    } catch (err) {
+        console.error('Error during transfer:', err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// router.post('/transfer', authMiddleware, async (req, res) => {
+//     const { to, amount } = req.body;
+
+//     // Input validation
+//     if (!to || !amount || amount <= 0) {
+//         return res.status(400).json({ message: "Invalid input" });
+//     }
+
+//     // Start a MongoDB session
+//     const session = await mongoose.startSession();
+//     session.startTransaction();
+
+//     try {
+//         // Get the sender's details using req.user_id from the middleware
+//         const sender = await User.findById(req.user_id).session(session);
+//         if (!sender) {
+//             await session.abortTransaction();
+//             return res.status(404).json({ message: "Sender not found" });
+//         }
+
+//         // Check if sender has sufficient balance
+//         if (sender.balance < amount) {
+//             await session.abortTransaction();
+//             return res.status(400).json({ message: "Insufficient balance" });
+//         }
+
+//         // Find the recipient by username
+//         const recipient = await User.findOne({ username: to }).session(session);
+//         if (!recipient) {
+//             await session.abortTransaction();
+//             return res.status(404).json({ message: "Recipient not found" });
+//         }
+
+//         // Deduct amount from the sender's account
+//         await Account.updateOne(
+//             { userId: sender._id },
+//             { $inc: { balance: -amount } },
+//             { session }
+//         );
+
+//         // Add amount to the recipient's account
+//         await Account.updateOne(
+//             { userId: recipient._id },
+//             { $inc: { balance: amount } },
+//             { session }
+//         );
+
+//         // Commit the transaction
+//         await session.commitTransaction();
+//         session.endSession();
+
+//         return res.json({ message: "Transfer successful" });
+//     } catch (err) {
+//         console.error('Error during transfer:', err);
+
+//         // Abort the transaction in case of error
+//         await session.abortTransaction();
+//         session.endSession();
+
+//         return res.status(500).json({ message: "Server error" });
+//     }
+// });
 
 module.exports = router;

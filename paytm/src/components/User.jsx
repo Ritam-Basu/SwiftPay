@@ -21,7 +21,8 @@ export const User = ({ user }) => {
         <button 
         onClick={(e)=>{
         //   history.pushState("/send?id="+user._id+"&name="+user.firstname)
-        navigate("/send?id="+user._id+ "&name="+user.firstname);
+        navigate("/send?id="+user.username+ "&name="+user.firstname);
+        console.log(user);
         }}
         className="px-4 py-2 text-sm text-white bg-blue-500 rounded hover:bg-blue-600 transition duration-200">
           Send money
