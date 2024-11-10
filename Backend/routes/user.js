@@ -1,6 +1,6 @@
 const express = require('express');
 const zod = require("zod");
-const { User, Account } = require('../db');
+const { User, Account,Transaction } = require('../db');
 const jwt = require('jsonwebtoken');
 const JWT_SECRET_KEY = require('../config'); // If `config` exports a single string
 const authMiddleware = require('../middleware/authmiddleware');
@@ -182,66 +182,65 @@ router.get("/balance", authMiddleware, async (req, res) => {
 });
 
 
-// Transfer Route
-async function transfer(req, res) {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+// // Transfer Route
+// async function transfer(req, res) {
+//     const session = await mongoose.startSession();
+//     session.startTransaction();
 
-    try {
-        let { amount, to } = req.body;
+//     try {
+//         let { amount, to } = req.body;
 
-        amount = parseFloat(amount);
+//         amount = parseFloat(amount);
 
-        if (!amount || typeof amount !== 'number' || amount <= 0) {
-            await session.abortTransaction();
-            return res.status(400).json({ message: "Amount must be a positive number." });
-        }
+//         if (!amount || typeof amount !== 'number' || amount <= 0) {
+//             await session.abortTransaction();
+//             return res.status(400).json({ message: "Amount must be a positive number." });
+//         }
 
-        if (!mongoose.isValidObjectId(to)) {
-            await session.abortTransaction();
-            return res.status(400).json({ message: "Recipient ID is invalid." });
-        }
+//             if (!to ) {
+//                     return res.status(400).json({ message: "Invalid input" });
+//                 }
 
-        // Find sender account
-        const senderAccount = await Account.findOne({ userId: req.user_id }).session(session);
+//         // Find sender account
+//         const senderAccount = await Account.findOne({ userId: req.user_id }).session(session);
         
-        if (!senderAccount || senderAccount.balance < amount) {
-            await session.abortTransaction();
-            return res.status(400).json({ message: "Insufficient balance or sender account not found." });
-        }
+//         if (!senderAccount || senderAccount.balance < amount) {
+//             await session.abortTransaction();
+//             return res.status(400).json({ message: "Insufficient balance or sender account not found." });
+//         }
 
-        // Find recipient account
-        const recipientAccount = await Account.findOne({ username:to }).session(session);
-        if (!recipientAccount) {
-            await session.abortTransaction();
-            return res.status(400).json({ message: "Recipient account not found." });
-        }
+//         // Find recipient account
+//         const recipient = await User.findOne({ username: to }).session(session);
+//         if (!recipient) {
+//             await session.abortTransaction();
+//             return res.status(404).json({ message: "Recipient not found" });
+//         }
 
-        // Perform balance updates
-        await Account.updateOne(
-            { userId: req.user_id },
-            { $inc: { balance: -amount } },
-            { session }
-        );
-        await Account.updateOne(
-            { userId: to },
-            { $inc: { balance: amount } },
-            { session }
-        );
+//         // Perform balance updates
+//         await Account.updateOne(
+//             { userId: req.user_id },
+//             { $inc: { balance: -amount } },
+//             { session }
+//         );
+//         await Account.updateOne(
+//             { userId: recipient._id },
+//             { $inc: { balance: amount } },
+//             { session }
+//         );
 
-        // Commit transaction
-        await session.commitTransaction();
-        res.json({ message: "Transfer successful" });
-    } catch (error) {
-        await session.abortTransaction();
-        console.error("Transfer Error:", error);
-        res.status(500).json({ message: "Transfer failed due to server error." });
-    } finally {
-        session.endSession();
-    }
-}
+//         // Commit transaction
+//         await session.commitTransaction();
+//         res.json({ message: "Transfer successful" });
+//     } catch (error) {
+//         await session.abortTransaction();
+//         console.error("Transfer Error:", error);
+//         res.status(500).json({ message: "Transfer failed due to server error." });
+//     } finally {
+//         session.endSession();
+//     }
+// }
 
-// Add the transfer route to router
+// // Add the transfer route to router
 // router.post('/transfer', authMiddleware, transfer);
 
 
@@ -283,6 +282,18 @@ router.post('/transfer', authMiddleware, async (req, res) => {
             
             { $inc: { balance: +amount } },
         )
+        const transaction = new Transaction({
+            senderId: req.user_id,
+            senderName: sender.username, // Store sender's name
+            recipientId: recipient._id,
+            recipientName: recipient.username, // Store recipient's name
+            amount,
+            status: 'Success',
+        });
+
+        // Save the transaction
+        await transaction.save();
+            
 
         res.json({ message: "Transfer successful" });
     } catch (err) {
@@ -291,67 +302,26 @@ router.post('/transfer', authMiddleware, async (req, res) => {
     }
 });
 
-// router.post('/transfer', authMiddleware, async (req, res) => {
-//     const { to, amount } = req.body;
 
-//     // Input validation
-//     if (!to || !amount || amount <= 0) {
-//         return res.status(400).json({ message: "Invalid input" });
-//     }
+router.get('/transactions', authMiddleware, async (req, res) => {
+    const userId = req.user_id; // Get user ID from the middleware (already attached to req)
 
-//     // Start a MongoDB session
-//     const session = await mongoose.startSession();
-//     session.startTransaction();
+    try {
+        // Find transactions where the user is either the sender or recipient
+        const transactions = await Transaction.find({
+            $or: [{ senderId: userId }, { recipientId: userId }]
+        }).sort({ timestamp: -1 }); // Sort by timestamp in descending order (most recent first)
 
-//     try {
-//         // Get the sender's details using req.user_id from the middleware
-//         const sender = await User.findById(req.user_id).session(session);
-//         if (!sender) {
-//             await session.abortTransaction();
-//             return res.status(404).json({ message: "Sender not found" });
-//         }
+        // Return the transaction data
+        res.json(transactions);
+    } catch (error) {
+        console.error('Error fetching transactions:', error);
+        res.status(500).json({ error: 'Failed to fetch transaction history' });
+    }
+});
 
-//         // Check if sender has sufficient balance
-//         if (sender.balance < amount) {
-//             await session.abortTransaction();
-//             return res.status(400).json({ message: "Insufficient balance" });
-//         }
 
-//         // Find the recipient by username
-//         const recipient = await User.findOne({ username: to }).session(session);
-//         if (!recipient) {
-//             await session.abortTransaction();
-//             return res.status(404).json({ message: "Recipient not found" });
-//         }
 
-//         // Deduct amount from the sender's account
-//         await Account.updateOne(
-//             { userId: sender._id },
-//             { $inc: { balance: -amount } },
-//             { session }
-//         );
 
-//         // Add amount to the recipient's account
-//         await Account.updateOne(
-//             { userId: recipient._id },
-//             { $inc: { balance: amount } },
-//             { session }
-//         );
-
-//         // Commit the transaction
-//         await session.commitTransaction();
-//         session.endSession();
-
-//         return res.json({ message: "Transfer successful" });
-//     } catch (err) {
-//         console.error('Error during transfer:', err);
-
-//         // Abort the transaction in case of error
-//         await session.abortTransaction();
-//         session.endSession();
-
-//         return res.status(500).json({ message: "Server error" });
-//     }
-// });
 
 module.exports = router;

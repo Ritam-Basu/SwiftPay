@@ -36,12 +36,67 @@ const AccountSchema = new mongoose.Schema({
         
     }
 });
+// const transactionSchema = new mongoose.Schema({
+//     senderId: { 
+//         type: mongoose.Schema.Types.ObjectId, 
+//         ref: 'User', 
+//         required: true
+//      },
+//     recipientId: { 
+//         type: mongoose.Schema.Types.ObjectId,
+//          ref: 'User', 
+//          required: true
+//          },
+        
+//     amount: { 
+//         type: Number,
+//          required: true 
+//         },
+//     status: { type: String, enum: ['Success', 'Failed'], default: 'Success' },
+//     timestamp: { type: Date, default: Date.now },
+//   });
+const transactionSchema = new mongoose.Schema({
+    senderId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'User', 
+        required: true 
+    },
+    senderName: { 
+        type: String, 
+        required: true 
+    },
+    recipientId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'User', 
+        required: true 
+    },
+    recipientName: { 
+        type: String, 
+        required: true 
+    },
+    amount: { 
+        type: Number, 
+        required: true 
+    },
+    status: { 
+        type: String, 
+        enum: ['Success', 'Failed'], 
+        default: 'Success' 
+    },
+    timestamp: { 
+        type: Date, 
+        default: Date.now 
+    },
+});
+
 
 // Define models
 const User = mongoose.model('user', UserSchema);
 const Account = mongoose.model('account', AccountSchema);
+const Transaction = mongoose.model('Transaction', transactionSchema);
 
 module.exports = {
     User,
     Account,
+    Transaction,
 };

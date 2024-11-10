@@ -9,6 +9,8 @@ import { Sendmoney } from './pages/Sendmoney'
 import { Sendpage } from './pages/Sendpage'
 import {Updatepage} from './pages/Updatepage'
 import { Profile } from './pages/Profile'
+import { Transactionhist } from './pages/Transactionhist'
+
 
 
 
@@ -26,6 +28,7 @@ function App() {
       <Route path="/send"  element={<Sendpage/>}/>
       <Route path="/update"  element={<Updatepage/>}/>
       <Route path="/profile"  element={<Profile/>}/>
+      <Route path="/history"  element={<Transactionhist/>}/>
 
       
     </Routes>

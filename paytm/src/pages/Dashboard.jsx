@@ -36,17 +36,26 @@ export function Dashboard() {
         <div className="flex space-x-4 mb-6 justify-center">
   <button
     onClick={() => navigate("/profile")}
-    className="w-full md:w-auto py-3 px-6 bg-emerald-500 text-white rounded-md shadow-md hover:bg-emerald-600 transition-colors"
+class="text-white bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
   >
     Profile
   </button>
 
   <button
     onClick={() => navigate("/update")}
-    className="w-full md:w-auto py-3 px-6 bg-amber-500 text-white rounded-md shadow-md hover:bg-amber-600 transition-colors"
+    class="text-white bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 dark:focus:ring-teal-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
+
   >
     Update
   </button>
+  <button
+    onClick={() => navigate("/history")}
+   class="text-white bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
+  >
+    History
+  </button>
+ 
+
 </div>
 
 
