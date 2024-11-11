@@ -14,7 +14,7 @@ export function Users() {
     const fetchUsers = async () => {
       try {
         const myUsername = searchParams.get("id");
-        console.log("Query Parameter ID:", myUsername); // Debugging log
+        console.log("Query Parameter ID:", myUsername); 
 
         // Fetch the list of users from the backend
         const response = await axios.get(`http://localhost:3001/api/v1/user/bulk`);

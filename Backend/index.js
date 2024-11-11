@@ -24,6 +24,7 @@ app.use(express.json()); // No need for `body-parser` as `express.json()` does t
 
 // Use the main router for API routes
 app.use("/api/v1", mainRouter);
+
 app.get('/',(req,res)=>{
     res.send('Hello World')
 })

@@ -59,7 +59,7 @@ class="text-white bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:
 </div>
 
 
-        {/* Display balance with margin for spacing */}
+        
         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
           Balance: Rs {Math.round(balance)}
         </h2>

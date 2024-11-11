@@ -15,8 +15,6 @@ export function Profile() {
       if (!token) return;
 
       // Decode the token
-      
-
       // Fetch the user's profile with the token in the header
       const response = await axios.get(`http://localhost:3001/api/v1/user/profile`, {
         headers: {
