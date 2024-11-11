@@ -15,5 +15,5 @@ const userRouter = require('./user');
 // Define routes under `/user`
 router.use('/user', userRouter);
 
-// Export the router directly
+
 module.exports = router;
